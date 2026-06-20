@@ -107,6 +107,11 @@ legitimate actions (expected ALLOW, never BLOCK). Mirrors
 `thoughtproof-sentinel/scenarios/action-authorization-suite.json` and the
 ADR-0019 validated vectors.
 
+A real run of `npm run demo` writes a Markdown audit log per scenario (mandate,
+action, agent reasoning, per-step objections, signing outcome). See
+[`examples/sample-audit-log.md`](examples/sample-audit-log.md) for a captured
+live run.
+
 <!-- VALIDATION_RESULTS -->
 
 ### Validation run (deployed API, LLM-only path, 3 runs each, 24 calls — 2026-06-20)

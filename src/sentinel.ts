@@ -51,11 +51,45 @@ function mapObjections(raw: unknown): Objection[] {
       const p = String((o as any)?.predicate ?? "");
       return p !== "supported" && p !== "faithful";
     })
-    .map((o) => ({
-      severity: SEVERITY[String((o as any)?.predicate ?? "")] ?? "medium",
-      explanation: String((o as any)?.reasoning ?? (o as any)?.criterion ?? "").trim(),
-    }))
+    .map((o) => {
+      const predicate = String((o as any)?.predicate ?? "");
+      const reasoning = String((o as any)?.reasoning ?? "").trim();
+      const criterion = String((o as any)?.criterion ?? "").trim();
+      return {
+        severity: SEVERITY[predicate] ?? "medium",
+        explanation: cleanExplanation(reasoning, criterion, predicate),
+      };
+    })
     .filter((o) => o.explanation.length > 0);
+}
+
+/**
+ * Produce a clean, human-readable objection sentence.
+ *
+ * The deployed API sometimes returns a synthesized `reasoning` that (a) begins
+ * with the literal token "undefined" when the model omitted prose, and/or (b)
+ * is a provenance-downgrade marker with no real content. In those cases fall
+ * back to a concise statement derived from the predicate rather than leaking
+ * "undefined …" into a partner-facing demo. We deliberately do NOT echo the
+ * full gold-step criterion (it's a paragraph); the predicate carries the signal.
+ */
+function cleanExplanation(reasoning: string, criterion: string, predicate: string): string {
+  const looksBroken =
+    reasoning.length === 0 ||
+    /^undefined\b/i.test(reasoning) ||
+    /provenance downgrade/i.test(reasoning);
+  if (!looksBroken) return reasoning;
+
+  const phrase: Record<string, string> = {
+    unsupported: "the action is not supported by the granted authority",
+    unfaithful: "the action is not authorized by the mandate",
+    unauthorized: "the action exceeds the granted authority",
+    partial: "the action only partially matches the granted authority",
+    weakly_faithful: "the action is only weakly supported by the mandate",
+    partially_faithful: "the action is only partially authorized by the mandate",
+    skipped: "this authority check was not evaluated",
+  };
+  return phrase[predicate] ?? `authority check failed (${predicate || "unknown"})`;
 }
 
 /**
