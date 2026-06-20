@@ -56,7 +56,8 @@ describe("verifyDecision — request serialization (the MetaMask-facing contract
     const { calls } = stubFetch({ verdict: "ALLOW", confidence: 1, objections: [] });
     await verifyDecision(decision, "k", { gateMode: "enforce" });
     const body = JSON.parse(calls[0].init.body);
-    // This is the exact field MetaMask asked about — assert it serializes.
+    // The mandate + gateMode pair is what activates the deterministic
+    // authorization gate server-side — assert it serializes onto the wire.
     expect(body.gateMode).toBe("enforce");
     expect(body.mandate).toBeDefined();
     expect(body.mandate.granted).toMatchObject({
