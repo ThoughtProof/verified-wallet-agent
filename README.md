@@ -8,6 +8,9 @@ signs anything.**
 > it's doing. And it still drains the wallet — because it exceeds the authority
 > the user granted. That's the gap this agent closes.
 
+> 📋 **Start here:** [**Sentinel Verified Agents — Trading & Wallet, side by side**](docs/sentinel-verified-agents.md)
+> — the shared map for this repo and its trading counterpart, and why they pair.
+
 ## What this is (and what it is *not*)
 
 This is the **wallet** counterpart to
