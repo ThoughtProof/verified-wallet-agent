@@ -1,0 +1,22 @@
+{
+  "name": "verified-wallet-agent",
+  "version": "0.1.0",
+  "description": "An autonomous wallet agent that verifies every on-chain action through ThoughtProof's action_authorization gate before signing. Catches the honest-but-over-scoped actions (unlimited approvals, injected recipients, amount overshoot, malicious permits, unknown bridges) that simulation and threat-scanning structurally miss.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "demo": "tsx scripts/demo.ts",
+    "verify": "tsx scripts/verify-suite.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT"
+}
