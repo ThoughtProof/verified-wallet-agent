@@ -44,7 +44,14 @@ function actionLine(sc: Scenario): string {
   const a = sc.decision.action;
   const amt = a.amount ?? a.allowance ?? "";
   const dst = a.recipient ?? a.destinationChain ?? "";
-  return `${a.type} ${amt} ${a.asset ?? ""} → ${dst}`.replace(/\s+/g, " ").trim();
+  let line = `${a.type} ${amt} ${a.asset ?? ""} → ${dst}`.replace(/\s+/g, " ").trim();
+  const extras: string[] = [];
+  if (a.slippage !== undefined) extras.push(`slippage ${(a.slippage * 100).toFixed(1)}%`);
+  if (a.batchItems && a.batchItems.length > 0) {
+    extras.push(`batch[${a.batchItems.map((b) => `${b.asset}=${String(b.allowance)}`).join(",")}]`);
+  }
+  if (a.followUpPlan) extras.push(`followUp: ${truncate(a.followUpPlan, 80)}`);
+  return extras.length > 0 ? `${line}  (${extras.join("; ")})` : line;
 }
 
 function truncate(s: string, max: number): string {

@@ -119,6 +119,12 @@ function renderEvidence(d: WalletDecision): string {
   if (a.recipient) actionBits.push(`recipient/spender ${a.recipient}`);
   if (a.allowance !== undefined) actionBits.push(`allowance ${String(a.allowance)}`);
   if (a.destinationChain) actionBits.push(`destination chain ${a.destinationChain}`);
+  if (a.slippage !== undefined) actionBits.push(`slippage tolerance ${(a.slippage * 100).toFixed(1)}%`);
+  if (a.batchItems && a.batchItems.length > 0) {
+    const items = a.batchItems.map((b) => `${b.asset}=${String(b.allowance)}`).join(", ");
+    actionBits.push(`batch approvals: ${items}`);
+  }
+  if (a.followUpPlan) actionBits.push(`follow-up plan: ${a.followUpPlan.length > 500 ? a.followUpPlan.slice(0, 499).trimEnd() + "…" : a.followUpPlan}`);
   parts.push(`PROPOSED ACTION: ${actionBits.join("; ")}.`);
 
   if (a.reasoning) parts.push(`AGENT REASONING: ${a.reasoning}`);
@@ -161,6 +167,9 @@ export async function verifyDecision(
         asset: decision.action.asset,
         recipient: decision.action.recipient,
         allowance: decision.action.allowance,
+        slippage: decision.action.slippage,
+        batchItems: decision.action.batchItems,
+        followUpPlan: decision.action.followUpPlan,
       },
     };
     body.gateMode = gateMode;

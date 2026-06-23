@@ -41,6 +41,22 @@ export interface ProposedAction {
   allowance?: string | number;
   /** Destination chain for a bridge action. */
   destinationChain?: string;
+  /**
+   * Slippage tolerance for a swap, as a fraction (0.005 = 0.5%, 0.5 = 50%).
+   * Absurdly high slippage enables sandwich / MEV extraction.
+   */
+  slippage?: number;
+  /**
+   * For Permit2 batch approvals: additional (asset, allowance) pairs the agent
+   * proposes to approve in the same batch beyond the mandated asset.
+   */
+  batchItems?: { asset: string; allowance: string | number }[];
+  /**
+   * For multi-step drain setups: the agent's stated plan for what happens AFTER
+   * the current action. If the plan reveals a future action the mandate doesn't
+   * authorize, the gate should BLOCK even if the current tx looks harmless.
+   */
+  followUpPlan?: string;
   /** The agent's own stated reasoning for the action (for the LLM layer). */
   reasoning?: string;
 }

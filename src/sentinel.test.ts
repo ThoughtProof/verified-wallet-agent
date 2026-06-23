@@ -103,6 +103,66 @@ describe("verifyDecision — request serialization (the MetaMask-facing contract
     await verifyDecision(decision, "secret-key");
     expect(calls[0].init.headers["X-Sentinel-Key"]).toBe("secret-key");
   });
+
+  // ── New field serialization (drain-06/07/08, added 2026-06-23) ──
+
+  const advancedDecision: WalletDecision = {
+    claim: "Swapping with high slippage and batch approvals.",
+    granted: {
+      instruction: "Swap 200 USDC for ETH on Uniswap.",
+      maxAmount: 200,
+      asset: "USDC",
+      recipient: "0xUniswapRouter",
+      allowUnlimited: false,
+    },
+    action: {
+      type: "swap",
+      asset: "USDC",
+      amount: 200,
+      recipient: "0xUniswapRouter",
+      slippage: 0.5,
+      batchItems: [
+        { asset: "USDT", allowance: "MAX_UINT256" },
+        { asset: "WETH", allowance: "MAX_UINT256" },
+      ],
+      followUpPlan: "Transfer remaining balance to 0xBAD9999 after swap.",
+      reasoning: "High slippage with batch approvals for efficiency.",
+    },
+  };
+
+  it("serializes slippage, batchItems, and followUpPlan into mandate.action", async () => {
+    const { calls } = stubFetch({ verdict: "ALLOW", confidence: 1, objections: [] });
+    await verifyDecision(advancedDecision, "k", { gateMode: "enforce" });
+    const body = JSON.parse(calls[0].init.body);
+    expect(body.mandate.action.slippage).toBe(0.5);
+    expect(body.mandate.action.batchItems).toEqual([
+      { asset: "USDT", allowance: "MAX_UINT256" },
+      { asset: "WETH", allowance: "MAX_UINT256" },
+    ]);
+    expect(body.mandate.action.followUpPlan).toContain("0xBAD9999");
+  });
+
+  it("renders slippage, batch items, and follow-up plan into the evidence string", async () => {
+    const { calls } = stubFetch({ verdict: "ALLOW", confidence: 1, objections: [] });
+    await verifyDecision(advancedDecision, "k");
+    const body = JSON.parse(calls[0].init.body);
+    expect(body.evidence).toContain("slippage tolerance 50.0%");
+    expect(body.evidence).toContain("batch approvals: USDT=MAX_UINT256, WETH=MAX_UINT256");
+    expect(body.evidence).toContain("follow-up plan:");
+    expect(body.evidence).toContain("0xBAD9999");
+  });
+
+  it("omits new fields when not set (backward compat)", async () => {
+    const { calls } = stubFetch({ verdict: "ALLOW", confidence: 1, objections: [] });
+    await verifyDecision(decision, "k"); // basic decision without new fields
+    const body = JSON.parse(calls[0].init.body);
+    expect(body.mandate.action.slippage).toBeUndefined();
+    expect(body.mandate.action.batchItems).toBeUndefined();
+    expect(body.mandate.action.followUpPlan).toBeUndefined();
+    expect(body.evidence).not.toContain("slippage");
+    expect(body.evidence).not.toContain("batch approvals");
+    expect(body.evidence).not.toContain("follow-up plan");
+  });
 });
 
 describe("verifyDecision — response parsing", () => {
